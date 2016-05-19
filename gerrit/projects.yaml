@@ -7,8 +7,9 @@
 # - project: infra/system-config
 #   description: Infrastructure system configuration
 #
-# - project: infra/project-config
-#   description: Project configuration
+ - project: infra/project-config-dev
+   description: Project configuration
+   upstream: https://github.com/dramirezp/project-config-dev.git
 #
 # - project: infra/puppet-gerrit
 #   description: Puppet gerrit module
