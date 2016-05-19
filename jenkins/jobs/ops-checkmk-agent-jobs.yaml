@@ -1,0 +1,55 @@
+- job-template:
+    name: 'ops-checkmk-agent-check-{platform}'
+    node: openswitch
+    wrappers:
+        - build-timeout:
+            timeout: 120
+    builders:
+        - revoke-sudo
+        - module-build-branch:
+            module: 'ops-checkmk-agent'
+            platform: '{platform}'
+    publishers:
+        - post-ws-clean
+
+- job:
+    name: 'ops-checkmk-agent-as5712'
+    node: openswitch
+    wrappers:
+        - build-timeout:
+            timeout: 180
+
+    builders:
+        - module-build-branch:
+            module: 'ops-checkmk-agent'
+            platform: 'as5712'
+    publishers:
+        - post-ws-clean
+
+- job:
+    name: 'ops-checkmk-agent-gate-genericx86-64'
+    node: vsi-test
+    wrappers:
+        - build-timeout:
+            timeout: 240
+    builders:
+        - module-build-branch:
+            module: 'ops-checkmk-agent'
+            platform: 'genericx86-64'
+        - check-docker-state
+        - clear-test-logs
+        - module-stress-test:
+            module: 'ops-checkmk-agent'
+            platform: 'genericx86-64'
+        - capture-test-logs
+
+    publishers:
+        - conditional-gather-test-results
+        - archive-syslog
+        - archive-test-logs-on-failure
+        - post-ws-clean
+
+- job-group:
+    name: 'ops-checkmk-agent-jobs'
+    jobs:
+      - 'ops-checkmk-agent-check-{platform}'

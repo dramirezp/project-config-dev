@@ -1,0 +1,57 @@
+- job-template:
+    name: 'ops-cfgd-check-{platform}'
+    node: openswitch
+
+    wrappers:
+        - build-timeout:
+            timeout: 120
+
+    builders:
+        - revoke-sudo
+        - module-build-branch:
+            module: 'ops-cfgd'
+            platform: '{platform}'
+    publishers:
+        - post-ws-clean
+
+- job:
+    name: 'ops-cfgd-gate-as5712'
+    node: openswitch
+
+    wrappers:
+        - build-timeout:
+            timeout: 180
+
+    builders:
+        - module-build-branch:
+            module: 'ops-cfgd'
+            platform: 'as5712'
+    publishers:
+        - post-ws-clean
+
+- job:
+    name: 'ops-cfgd-gate-genericx86-64'
+    node: vsi
+
+    wrappers:
+        - build-timeout:
+            timeout: 180
+
+    builders:
+        - module-build-branch:
+            module: 'ops-cfgd'
+            platform: 'genericx86-64'
+        - check-docker-state
+        - module-test:
+            module: 'ops-cfgd'
+            platform: 'genericx86-64'
+    publishers:
+        - conditional-gather-test-results
+        - archive-syslog
+        - post-ws-clean
+
+
+- job-group:
+    name: 'ops-cfgd-jobs'
+    jobs:
+      - 'ops-cfgd-check-{platform}'

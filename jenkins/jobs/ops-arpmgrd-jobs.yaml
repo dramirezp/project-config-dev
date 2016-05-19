@@ -1,0 +1,63 @@
+- job-template:
+    name: 'ops-arpmgrd-check-{platform}'
+    node: openswitch
+
+    wrappers:
+        - build-timeout:
+            timeout: 120
+
+    builders:
+        - revoke-sudo
+        - module-build-branch:
+            module: 'ops-arpmgrd'
+            platform: '{platform}'
+
+    publishers:
+        - post-ws-clean
+
+- job:
+    name: 'ops-arpmgrd-gate-as5712'
+    node: openswitch
+
+    wrappers:
+        - build-timeout:
+            timeout: 180
+
+    builders:
+        - module-build-branch:
+            module: 'ops-arpmgrd'
+            platform: 'as5712'
+
+    publishers:
+        - post-ws-clean
+
+- job:
+    name: 'ops-arpmgrd-gate-genericx86-64'
+    node: vsi
+
+    wrappers:
+        - build-timeout:
+            timeout: 180
+
+    builders:
+        - module-build-branch:
+            module: 'ops-arpmgrd'
+            platform: 'genericx86-64'
+        - check-docker-state
+        - clear-test-logs
+        - module-test:
+            module: 'ops-arpmgrd'
+            platform: 'genericx86-64'
+        - capture-test-logs
+
+    publishers:
+        - conditional-htmlreports
+        - conditional-gather-test-results
+        - archive-syslog
+        - archive-test-logs-on-failure
+        - post-ws-clean
+
+- job-group:
+    name: 'ops-arpmgrd-jobs'
+    jobs:
+      - 'ops-arpmgrd-check-{platform}'

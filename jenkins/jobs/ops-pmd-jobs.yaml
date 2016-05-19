@@ -1,0 +1,56 @@
+- job-template:
+    name: 'ops-pmd-check-{platform}'
+    node: openswitch
+    wrappers:
+        - build-timeout:
+            timeout: 120
+    builders:
+        - revoke-sudo
+        - module-build-branch:
+            module: 'ops-pmd'
+            platform: '{platform}'
+    publishers:
+        - post-ws-clean
+
+- job:
+    name: 'ops-pmd-gate-as5712'
+    node: openswitch
+
+    wrappers:
+        - build-timeout:
+            timeout: 180
+
+    builders:
+        - module-build-branch:
+            module: 'ops-pmd'
+            platform: 'as5712'
+    publishers:
+        - post-ws-clean
+
+- job:
+    name: 'ops-pmd-gate-genericx86-64'
+    node: vsi
+
+    wrappers:
+        - build-timeout:
+            timeout: 180
+
+    builders:
+        - module-build-branch:
+            module: 'ops-pmd'
+            platform: 'genericx86-64'
+        - check-docker-state
+        - module-test:
+            module: 'ops-pmd'
+            platform: 'genericx86-64'
+
+    publishers:
+        - conditional-htmlreports
+        - conditional-gather-test-results
+        - archive-syslog
+        - post-ws-clean
+
+- job-group:
+    name: 'ops-pmd-jobs'
+    jobs:
+      - 'ops-pmd-check-{platform}'

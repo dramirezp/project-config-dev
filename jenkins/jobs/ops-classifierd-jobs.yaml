@@ -1,0 +1,59 @@
+- job-template:
+    name: 'ops-classifierd-check-{platform}'
+    node: openswitch
+    wrappers:
+        - build-timeout:
+            timeout: 120
+    builders:
+        - revoke-sudo
+        - module-build-branch:
+            module: 'ops-classifierd'
+            platform: '{platform}'
+    publishers:
+        - post-ws-clean
+
+- job:
+    name: 'ops-classifierd-gate-as5712'
+    node: openswitch
+
+    wrappers:
+        - build-timeout:
+            timeout: 180
+
+    builders:
+        - module-build-branch:
+            module: 'ops-classifierd'
+            platform: 'as5712'
+    publishers:
+        - post-ws-clean
+
+- job:
+    name: 'ops-classifierd-gate-genericx86-64'
+    node: vsi
+
+    wrappers:
+        - build-timeout:
+            timeout: 180
+
+    builders:
+        - module-build-branch:
+            module: 'ops-classifierd'
+            platform: 'genericx86-64'
+        - check-docker-state
+        - clear-test-logs
+        - module-test:
+            module: 'ops-classifierd'
+            platform: 'genericx86-64'
+        - capture-test-logs
+
+    publishers:
+        - conditional-junit
+        - conditional-htmlreports
+        - archive-syslog
+        - archive-test-logs-on-failure
+        - post-ws-clean
+
+- job-group:
+    name: 'ops-classifierd-jobs'
+    jobs:
+      - 'ops-classifierd-check-{platform}'

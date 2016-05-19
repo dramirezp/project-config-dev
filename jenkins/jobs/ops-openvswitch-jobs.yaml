@@ -1,0 +1,70 @@
+- job-template:
+    name: 'ops-openvswitch-check-{platform}'
+    node: openswitch
+    wrappers:
+        - build-timeout:
+            timeout: 120
+    builders:
+        - revoke-sudo
+        - module-build-branch:
+            module: 'ops-openvswitch'
+            platform: '{platform}'
+    publishers:
+        - post-ws-clean
+
+- job:
+    name: 'ops-openvswitch-gate-as5712'
+    node: openswitch
+
+    wrappers:
+        - build-timeout:
+            timeout: 180
+
+    builders:
+        - module-build-branch:
+            module: 'ops-openvswitch'
+            platform: 'as5712'
+    publishers:
+        - post-ws-clean
+
+- job:
+    name: 'ops-openvswitch-gate-genericx86-64'
+    node: vsi
+
+    wrappers:
+        - build-timeout:
+            timeout: 180
+
+    builders:
+        - module-build-branch:
+            module: 'ops-openvswitch'
+            platform: 'genericx86-64'
+        - check-docker-state
+        - clear-test-logs
+        - module-test:
+            module: 'ops-openvswitch'
+            platform: 'genericx86-64'
+        - capture-test-logs
+        - shell: |
+            #!/bin/bash -x
+            set -e
+            cd src/ops-openvswitch/build
+            make dist-docs
+
+    publishers:
+        - conditional-gather-test-results
+        - archive-syslog
+        - archive-test-logs-on-failure
+        - post-ws-clean
+        - scp:
+            site: static.openswitch.net
+            files:
+              - target: 'docs/openswitch/schema'
+                source: 'src/ops-openvswitch/build/dist-docs/ovs-vswitchd.conf.db.5*'
+                keep-hierarchy: false
+                copy-after-failure: false
+
+- job-group:
+    name: 'ops-openvswitch-jobs'
+    jobs:
+      - 'ops-openvswitch-check-{platform}'
