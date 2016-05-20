@@ -7,9 +7,13 @@
 # - project: infra/system-config
 #   description: Infrastructure system configuration
 #
+# Infrastructure projects
  - project: infra/project-config-dev
-   description: Project configuration
-   upstream: https://github.com/dramirezp/project-config-dev.git
+   description: Project configuration in the testig environment
+   upstream: https://git.openswitch.net/infra/project-config
+   upstream-prefix: upstream
+   options:
+    - track-upstream
 #
 # - project: infra/puppet-gerrit
 #   description: Puppet gerrit module
